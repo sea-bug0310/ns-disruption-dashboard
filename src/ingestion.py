@@ -32,7 +32,7 @@ explicitly state exactly which file/module generated the log
 
 log = logging.getLogger(__name__)
 
-API_KEY = os.environ["NS_API_KEY"]
+API_KEY = os.environ.get("NS_API_KEY")
 URL = "https://gateway.apiportal.ns.nl/disruptions/v3"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
