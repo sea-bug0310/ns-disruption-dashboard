@@ -2,7 +2,6 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 import requests
-import sqlite3
 import logging
 import time
 from pathlib import Path
@@ -32,14 +31,16 @@ explicitly state exactly which file/module generated the log
 
 log = logging.getLogger(__name__)
 
+load_dotenv()
 API_KEY = os.environ.get("NS_API_KEY")
 URL = "https://gateway.apiportal.ns.nl/disruptions/v3"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # ------------------DB CONNECTION --------------
-load_dotenv()
-def get_connection(): 
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+def get_connection():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL environment variable is missing")
+    return psycopg2.connect(DATABASE_URL)
 
 # ---------------- HTTP ----------------
 def get_session():
@@ -409,8 +410,6 @@ def mark_resolved_disruptions(cur, active_ids, now):
         """, (now,))
         return
 
-    placeholders = ",".join("?" for _ in active_ids)
-
     cur.execute(f"""
         UPDATE disruptions
         SET is_active = FALSE,
@@ -480,11 +479,6 @@ def run_ingestion():
 # ---------------- Scheduler ----------------
 
 if __name__ == "__main__":
-    init_db()
-
     log.info("Starting NS disruption ingestion")
-
     run_ingestion()
-
     log.info("Ingestion script finished")
-
