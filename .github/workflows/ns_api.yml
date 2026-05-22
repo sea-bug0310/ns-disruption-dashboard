@@ -24,4 +24,4 @@ jobs:
       - name: Run ETL
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: python src/fetch_disruptions.py
+        run: python src/ingestion.py
