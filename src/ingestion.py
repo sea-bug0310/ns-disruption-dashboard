@@ -407,7 +407,7 @@ def mark_resolved_disruptions(cur, active_ids, now):
             SET is_active = FALSE,
                 last_seen_at = %s
             WHERE is_active = TRUE
-        """, (now,))
+        """, (now, active_ids))
         return
 
     cur.execute(f"""
@@ -416,7 +416,7 @@ def mark_resolved_disruptions(cur, active_ids, now):
             last_seen_at = %s
         WHERE is_active = TRUE
           AND NOT (id = ANY(%s))
-    """, [now, *active_ids])
+    """, [now, active_ids])
 
 # ---------------- Main job ----------------
 
@@ -451,6 +451,7 @@ def run_ingestion():
         mark_resolved_disruptions(cur, active_ids, now)
 
         conn.commit()
+        log.info("Inserted/updated disruption id=%s", disruption["id"])
         log.info("Saved %s disruptions to database", saved_count)
 
     except requests.exceptions.Timeout:
@@ -458,19 +459,23 @@ def run_ingestion():
         # to avoid saving incomplete or inconsistent data
         conn.rollback()
         log.error("Request timed out")
+        raise
 
     except requests.exceptions.HTTPError as e:
         conn.rollback()
         status = e.response.status_code if e.response else "unknown"
         log.error("HTTP error %s: %s", status, e)
+        raise
 
     except requests.exceptions.RequestException as e:
         conn.rollback()
         log.error("Network error: %s", e)
+        raise
 
     except Exception as e:
         conn.rollback()
         log.exception("Unexpected error: %s", e)
+        raise
 
     finally:
         conn.close()
