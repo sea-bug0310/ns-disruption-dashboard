@@ -9,7 +9,6 @@ from pathlib import Path
 from datetime import datetime, timezone
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from db import get_connection, init_db
 from math import radians, sin, cos, sqrt, atan2
 
 
