@@ -407,16 +407,16 @@ def mark_resolved_disruptions(cur, active_ids, now):
             SET is_active = FALSE,
                 last_seen_at = %s
             WHERE is_active = TRUE
-        """, (now, active_ids))
+        """, (now,))
         return
 
-    cur.execute(f"""
+    cur.execute("""
         UPDATE disruptions
         SET is_active = FALSE,
             last_seen_at = %s
         WHERE is_active = TRUE
           AND NOT (id = ANY(%s))
-    """, [now, active_ids])
+    """, (now, active_ids))
 
 # ---------------- Main job ----------------
 
