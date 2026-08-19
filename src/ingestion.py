@@ -66,6 +66,9 @@ def get_session():
     return session
 
 def fetch_disruptions():
+    if not API_KEY:
+        raise RuntimeError("NS_API_KEY environment variable is missing")
+
     # get your resilient session with retry logic
     session = get_session()
 
