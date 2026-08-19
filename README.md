@@ -1,6 +1,6 @@
 # 🇳🇱 NS Train Disruptions Data Pipeline & Live Dashboard
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ns-disruption-dashboard-70283043290.streamlit.app/)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-green.svg)](https://supabase.com/)
 [![GitHub Actions](https://img.shields.io/badge/orchestration-GitHub%20Actions-orange.svg)](https://github.com/features/actions)
