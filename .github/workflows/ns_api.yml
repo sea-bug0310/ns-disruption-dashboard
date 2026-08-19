@@ -24,4 +24,5 @@ jobs:
       - name: Run ETL
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NS_API_KEY: ${{ secrets.NS_API_KEY }}
         run: python src/ingestion.py
