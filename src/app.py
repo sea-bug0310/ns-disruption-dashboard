@@ -154,13 +154,17 @@ with col1:
     if 'disruption_type' in df.columns:
         type_counts = df['disruption_type'].value_counts().reset_index()
         type_counts.columns = ['disruption_type', 'count']
-        fig_type = px.pie(
+        
+        fig_type = px.bar(
             type_counts, 
-            values='count', 
-            names='disruption_type', 
-            hole=0.4, 
-            color_discrete_sequence=px.colors.sequential.YlOrRd_r
+            x='count', 
+            y='disruption_type', 
+            orientation='h',
+            color='count',
+            color_continuous_scale=px.colors.sequential.YlOrRd_r,
+            labels={'disruption_type': 'Disruption Type', 'count': 'Incidents'}
         )
+        fig_type.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig_type, use_container_width=True)
 
 # --- Chart 2: Consequence Level ---
@@ -201,7 +205,7 @@ with col3:
             y='cause_label', 
             orientation='h', 
             color='count',
-            color_continuous_scale=px.colors.sequential.Viridis,
+            color_continuous_scale=px.colors.sequential.Oranges[3:],
             labels={'cause_label': 'Cause', 'count': 'Incidents'}
         )
         fig_cause.update_layout(yaxis={'categoryorder': 'total ascending'})
