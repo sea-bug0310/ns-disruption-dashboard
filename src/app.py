@@ -166,19 +166,23 @@ with col1:
 # --- Chart 2: Consequence Level ---
 with col2:
     st.subheader("Top 10 Consequences")
-    if 'consequence_level' in df.columns:
-        clean_consequence_df = df[df['consequence_level'].notna() & (df['consequence_level'] != "")]
-        consequence_counts = clean_consequence_df['consequence_level'].value_counts().reset_index()
-        consequence_counts.columns = ['consequence_level', 'count']
+    
+    # Use consequence_description if available, otherwise fallback to consequence_level
+    consequence_col = 'consequence_description' if 'consequence_description' in df.columns else 'consequence_level'
+    
+    if consequence_col in df.columns:
+        clean_consequence_df = df[df[consequence_col].notna() & (df[consequence_col] != "")]
+        consequence_counts = clean_consequence_df[consequence_col].value_counts().reset_index()
+        consequence_counts.columns = [consequence_col, 'count']
         
         fig_consequence = px.bar(
             consequence_counts.head(10), 
             x='count', 
-            y='consequence_level',
+            y=consequence_col,
             orientation='h',
             color='count',
             color_continuous_scale=px.colors.sequential.Oranges,
-            labels={'consequence_level': 'Consequence Level', 'count': 'Incidents'}
+            labels={consequence_col: 'Consequence', 'count': 'Incidents'}
         )
         fig_consequence.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig_consequence, use_container_width=True)
