@@ -6,7 +6,7 @@ import plotly.express as px
 # 1. Page Configuration
 st.set_page_config(page_title="NS Train Disruptions Dashboard", layout="wide")
 st.title("🇳🇱 NS Train Disruptions Dashboard")
-st.markdown("Real-time insights into Dutch railway disruptions fetched from Supabase.")
+st.markdown("Real-time & historical insights into Dutch railway disruptions.")
 
 # 2. Initialize Supabase Connection
 @st.cache_resource
@@ -40,7 +40,6 @@ def load_data():
     df['duration_minutes'] = df['duration_minutes'].apply(lambda x: max(x, 0) if pd.notnull(x) else 0)
     df['duration_hours'] = df['duration_minutes'] / 60.0
     df['affected_km'] = pd.to_numeric(df['affected_km'], errors='coerce').fillna(0)
-    df['weighted_impact'] = df['duration_hours'] * df['affected_km']
     
     # --- Time Feature Extractions ---
     df = df[df['start_time'].notna()].copy()
@@ -96,7 +95,7 @@ if df.empty:
 
 # 5. KPI Metrics Row
 st.header("Key Performance Indicators")
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.metric(label="Total Disruptions", value=f"{len(df):,}")
@@ -107,9 +106,6 @@ with col2:
     st.metric(label="Avg Duration", value=avg_duration_val)
 
 with col3:
-    st.metric(label="Total Impact (Hours × Km)", value=f"{df['weighted_impact'].sum():,.0f}")
-
-with col4:
     active_count = df[df['is_active'] == True].shape[0] if 'is_active' in df.columns else 0
     st.metric(label="Active Disruptions", value=active_count)
 
