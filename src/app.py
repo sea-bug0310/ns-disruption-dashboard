@@ -181,7 +181,7 @@ with col2:
             y=consequence_col,
             orientation='h',
             color='count',
-            color_continuous_scale=px.colors.sequential.Oranges,
+            color_continuous_scale=px.colors.sequential.Oranges[3:],
             labels={consequence_col: 'Consequence', 'count': 'Incidents'}
         )
         fig_consequence.update_layout(yaxis={'categoryorder': 'total ascending'})
