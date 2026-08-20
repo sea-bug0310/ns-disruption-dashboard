@@ -155,17 +155,29 @@ with col1:
         type_counts = df['disruption_type'].value_counts().reset_index()
         type_counts.columns = ['disruption_type', 'count']
         
+        # 1. Calculate percentage for each category
+        total_count = type_counts['count'].sum()
+        type_counts['percentage'] = (type_counts['count'] / total_count) * 100
+        
         fig_type = px.bar(
             type_counts, 
             x='count', 
             y='disruption_type', 
             orientation='h',
             color='count',
-            color_continuous_scale=px.colors.sequential.YlOrRd_r,
+            color_continuous_scale=px.colors.sequential.YlOrRd_r[3:],
+            custom_data=['percentage'], # Pass percentage column to Plotly
             labels={'disruption_type': 'Disruption Type', 'count': 'Incidents'}
         )
+        
+        # 2. Customize the hover popup template
+        fig_type.update_traces(
+            hovertemplate="<b>%{y}</b><br>Incidents: %{x:,}<br>Percentage: %{customdata[0]:.1f}%<extra></extra>"
+        )
+        
         fig_type.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig_type, use_container_width=True)
+
 
 # --- Chart 2: Consequence Level ---
 with col2:
