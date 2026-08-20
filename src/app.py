@@ -162,7 +162,6 @@ with col1:
         fig_type = px.bar(
             type_counts, 
             x='count', 
-            y='disruption_type', 
             orientation='h',
             color='count',
             color_continuous_scale=px.colors.sequential.Oranges[3:],
@@ -194,7 +193,6 @@ with col2:
         fig_consequence = px.bar(
             consequence_counts.head(10), 
             x='count', 
-            y=consequence_col,
             orientation='h',
             color='count',
             color_continuous_scale=px.colors.sequential.Oranges[3:],
@@ -214,7 +212,6 @@ with col3:
         fig_cause = px.bar(
             cause_counts.head(10), 
             x='count', 
-            y='cause_label', 
             orientation='h', 
             color='count',
             color_continuous_scale=px.colors.sequential.Oranges[3:],
