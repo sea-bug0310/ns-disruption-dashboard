@@ -165,9 +165,9 @@ with col1:
             y='disruption_type', 
             orientation='h',
             color='count',
-            color_continuous_scale=px.colors.sequential.YlOrRd_r[3:],
+            color_continuous_scale=px.colors.sequential.Oranges[3:],
             custom_data=['percentage'], # Pass percentage column to Plotly
-            labels={'disruption_type': 'Disruption Type', 'count': 'Incidents'}
+            labels={'count': 'Incidents'}
         )
         
         # 2. Customize the hover popup template
@@ -198,7 +198,7 @@ with col2:
             orientation='h',
             color='count',
             color_continuous_scale=px.colors.sequential.Oranges[3:],
-            labels={consequence_col: 'Consequence', 'count': 'Incidents'}
+            labels={'count': 'Incidents'}
         )
         fig_consequence.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig_consequence, use_container_width=True)
@@ -218,7 +218,7 @@ with col3:
             orientation='h', 
             color='count',
             color_continuous_scale=px.colors.sequential.Oranges[3:],
-            labels={'cause_label': 'Cause', 'count': 'Incidents'}
+            labels={'count': 'Incidents'}
         )
         fig_cause.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig_cause, use_container_width=True)
