@@ -32,14 +32,15 @@ def load_data():
         
     # --- Data Processing ---
     df['start_time'] = pd.to_datetime(df['start_time'], errors='coerce')
-    df['calculated_end'] = pd.to_datetime(df['end_time'], errors='coerce')
+    df['end_time'] = pd.to_datetime(df['end_time'], errors='coerce')
     if 'expected_duration_end_time' in df.columns:
-        df['calculated_end'] = df['calculated_end'].fillna(pd.to_datetime(df['expected_duration_end_time'], errors='coerce'))
+        df['end_time'] = df['end_time'].fillna(pd.to_datetime(df['expected_duration_end_time'], errors='coerce'))
     
-    df['duration_minutes'] = (df['calculated_end'] - df['start_time']).dt.total_seconds() / 60.0
+    df['duration_minutes'] = (df['end_time'] - df['start_time']).dt.total_seconds() / 60.0
     df['duration_minutes'] = df['duration_minutes'].apply(lambda x: max(x, 0) if pd.notnull(x) else 0)
+    df['duration_hours'] = df['duration_minutes'] / 60.0
     df['affected_km'] = pd.to_numeric(df['affected_km'], errors='coerce').fillna(0)
-    df['weighted_impact'] = df['duration_minutes'] * df['affected_km']
+    df['weighted_impact'] = df['duration_hours'] * df['affected_km']
     
     # --- Time Feature Extractions ---
     df = df[df['start_time'].notna()].copy()
@@ -101,12 +102,12 @@ with col1:
     st.metric(label="Total Disruptions", value=f"{len(df):,}")
 
 with col2:
-    avg_duration = df[df['duration_minutes'] > 0]['duration_minutes'].mean()
-    avg_duration_val = f"{avg_duration:.1f} mins" if pd.notnull(avg_duration) else "0.0 mins"
+    avg_duration = df[df['duration_hours'] > 0]['duration_hours'].mean()
+    avg_duration_val = f"{avg_duration:.1f} hours" if pd.notnull(avg_duration) else "0.0 hours"
     st.metric(label="Avg Duration", value=avg_duration_val)
 
 with col3:
-    st.metric(label="Total Impact (Mins × Km)", value=f"{df['weighted_impact'].sum():,.0f}")
+    st.metric(label="Total Impact (Hours × Km)", value=f"{df['weighted_impact'].sum():,.0f}")
 
 with col4:
     active_count = df[df['is_active'] == True].shape[0] if 'is_active' in df.columns else 0
@@ -116,7 +117,7 @@ st.markdown("---")
 
 
 # 6. Interactive Time Series Breakdown with View Switching Buttons
-st.header("📈 Time Series Breakdowns")
+st.header("📈 Time Trends")
 
 view_option = st.radio("Select View", options=["By Month-Year", "By Week-Year"], horizontal=True)
 
@@ -141,89 +142,65 @@ fig_trend = px.bar(
 
 fig_trend.update_layout(xaxis_type='category')
 st.plotly_chart(fig_trend, use_container_width=True)
-
-# TEMPORARILY REMOVE
-
-# # 6. Interactive Time Series Breakdown with View Switching Buttons
-# st.header("📈 Time Trends")
-
-# # Prepare Month Data aggregation
-# trend_month = df.groupby(['Year_Month']).size().reset_index(name='Disruption Count').sort_values('Year_Month')
-
-# # Prepare Week Data aggregation
-# trend_week = df.groupby(['Year_Week']).size().reset_index(name='Disruption Count').sort_values('Year_Week')
-
-# # Base figure defaults to Month-Year view
-# fig_trend = px.bar(
-#     trend_month, 
-#     x='Year_Month', 
-#     y='Disruption Count',
-#     title="Disruptions Count Trend",
-#     labels={'Year_Month': 'Timeline', 'Disruption Count': 'Number of Incidents'},
-#     color='Disruption Count',
-#     color_continuous_scale=px.colors.sequential.Blues[3:]
-# )
-# fig_trend.update_layout(xaxis_type='category')
-
-# # Add Interactive View-switching Buttons inside Plotly
-# fig_trend.update_layout(
-#     updatemenus=[
-#         dict(
-#             type="buttons",
-#             direction="right",
-#             active=0,
-#             x=0.01,
-#             y=1.15,
-#             buttons=list([
-#                 dict(
-#                     label="By Month-Year",
-#                     method="update",
-#                     args=[
-#                         {"x": [trend_month['Year_Month']], "y": [trend_month['Disruption Count']], "marker.color": [trend_month['Disruption Count']]},
-#                         {"xaxis.title.text": "Timeline (Year-Month)"}
-#                     ]
-#                 ),
-#                 dict(
-#                     label="By Week-Year",
-#                     method="update",
-#                     args=[
-#                         {"x": [trend_week['Year_Week']], "y": [trend_week['Disruption Count']], "marker.color": [trend_week['Disruption Count']]},
-#                         {"xaxis.title.text": "Timeline (Year-Week)"}
-#                     ]
-#                 )
-#             ]),
-#         )
-#     ]
-# )
-
-# st.plotly_chart(fig_trend, use_container_width=True)
-
 st.markdown("---")
 
 
 # 7. Categorical Visualizations Row
 st.header("Disruption Breakdowns")
-left_chart_col, right_chart_col = st.columns(2)
-
-with left_chart_col:
-    st.subheader("Breakdown by Disruption Type")
+col1, col2, col3 = st.columns(3)
+# --- Chart 1: Disruption Type ---
+with col1:
+    st.subheader("Breakdown by Type")
     if 'disruption_type' in df.columns:
         type_counts = df['disruption_type'].value_counts().reset_index()
         type_counts.columns = ['disruption_type', 'count']
-        fig_type = px.pie(type_counts, values='count', names='disruption_type', 
-                          hole=0.4, color_discrete_sequence=px.colors.sequential.YlOrRd_r)
+        fig_type = px.pie(
+            type_counts, 
+            values='count', 
+            names='disruption_type', 
+            hole=0.4, 
+            color_discrete_sequence=px.colors.sequential.YlOrRd_r
+        )
         st.plotly_chart(fig_type, use_container_width=True)
 
-with right_chart_col:
-    st.subheader("Breakdown by Cause")
+# --- Chart 2: Consequence Level ---
+with col2:
+    st.subheader("Top 10 Consequences")
+    if 'consequence_level' in df.columns:
+        clean_consequence_df = df[df['consequence_level'].notna() & (df['consequence_level'] != "")]
+        consequence_counts = clean_consequence_df['consequence_level'].value_counts().reset_index()
+        consequence_counts.columns = ['consequence_level', 'count']
+        
+        fig_consequence = px.bar(
+            consequence_counts.head(10), 
+            x='count', 
+            y='consequence_level',
+            orientation='h',
+            color='count',
+            color_continuous_scale=px.colors.sequential.Oranges,
+            labels={'consequence_level': 'Consequence Level', 'count': 'Incidents'}
+        )
+        fig_consequence.update_layout(yaxis={'categoryorder': 'total ascending'})
+        st.plotly_chart(fig_consequence, use_container_width=True)
+
+# --- Chart 3: Top Causes ---
+with col3:
+    st.subheader("Top 10 Causes")
     if 'cause_label' in df.columns:
         clean_cause_df = df[df['cause_label'].notna() & (df['cause_label'] != "")]
         cause_counts = clean_cause_df['cause_label'].value_counts().reset_index()
         cause_counts.columns = ['cause_label', 'count']
-        fig_cause = px.bar(cause_counts.head(10), x='count', y='cause_label', 
-                           orientation='h', color='count',
-                           color_continuous_scale=px.colors.sequential.Viridis)
-        fig_cause.update_layout(yaxis={'categoryorder':'total ascending'})
+        
+        fig_cause = px.bar(
+            cause_counts.head(10), 
+            x='count', 
+            y='cause_label', 
+            orientation='h', 
+            color='count',
+            color_continuous_scale=px.colors.sequential.Viridis,
+            labels={'cause_label': 'Cause', 'count': 'Incidents'}
+        )
+        fig_cause.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig_cause, use_container_width=True)
 
 # 8. Detailed Data View
@@ -237,8 +214,8 @@ with st.expander("🔍 View Live Active Disruptions"):
     else:
         active_df = df
     preview_cols = [
-        'id', 'title', 'disruption_type', 'start_time', 'calculated_end', 
-        'duration_minutes', 'from_station', 'to_station', 'affected_km', 
+        'id', 'title', 'disruption_type', 'start_time', 'end_time', 
+        'duration_minutes', 'from_station', 'to_station', 'affected_km', 'consequence_level',
         'consequence_description', 'cause_label', 'Year_Month', 'Year_Week'
     ]
     available_cols = [col for col in preview_cols if col in active_df.columns]
