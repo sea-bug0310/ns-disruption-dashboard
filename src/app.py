@@ -71,19 +71,13 @@ month_order = ["January", "February", "March", "April", "May", "June", "July", "
 available_months = [m for m in month_order if m in df_raw['Month'].unique()]
 selected_months = st.sidebar.multiselect("Select Month(s)", options=available_months, default=available_months)
 
-# New: Disruption Type Multi-select Filter
+#Disruption Type Multi-select Filter
 if 'disruption_type' in df_raw.columns:
     available_types = sorted(df_raw['disruption_type'].dropna().unique())
     selected_types = st.sidebar.multiselect("Select Disruption Type(s)", options=available_types, default=available_types)
 else:
     selected_types = []
 
-# Scope Filter (Local vs National/International)
-if 'local' in df_raw.columns:
-    scope_options = ["All", "Local", "National / International"]
-    selected_scope = st.sidebar.radio("Disruption Scope", options=scope_options, index=0)
-else:
-    selected_scope = "All"
 
 # Apply All Filters Dynamically
 df = df_raw[
@@ -234,7 +228,22 @@ with right_chart_col:
 
 # 8. Detailed Data View
 st.markdown("---")
-with st.expander("🔍 View Live Ingested Records"):
-    preview_cols = ['id', 'title', 'disruption_type', 'Year_Month', 'Year_Week', 'is_active', 'from_station', 'to_station', 'affected_km', 'cause_label']
-    available_cols = [col for col in preview_cols if col in df.columns]
-    st.dataframe(df[available_cols].sort_values(by='Year_Month', ascending=False))
+
+with st.expander("🔍 View Live Active Disruptions"):
+    # Filter for active disruptions only (is_active == True)
+    if 'is_active' in df.columns:
+        active_mask = df['is_active'].astype(str).str.lower().isin(['true', '1'])
+        active_df = df[active_mask]
+    else:
+        active_df = df
+    preview_cols = [
+        'id', 'title', 'disruption_type', 'start_time', 'calculated_end', 
+        'duration_minutes', 'from_station', 'to_station', 'affected_km', 
+        'consequence_description', 'cause_label', 'Year_Month', 'Year_Week'
+    ]
+    available_cols = [col for col in preview_cols if col in active_df.columns]
+    
+    if active_df.empty:
+        st.info("No active disruptions currently recorded.")
+    else:
+        st.dataframe(active_df[available_cols].sort_values(by='start_time', ascending=False))
