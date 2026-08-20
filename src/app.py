@@ -148,7 +148,8 @@ fig_trend = px.bar(
 fig_trend.update_layout(xaxis_type='category')
 st.plotly_chart(fig_trend, use_container_width=True)
 
-"""temporarily remove"""
+# TEMPORARILY REMOVE
+
 # # 6. Interactive Time Series Breakdown with View Switching Buttons
 # st.header("📈 Time Trends")
 
@@ -201,7 +202,7 @@ st.plotly_chart(fig_trend, use_container_width=True)
 #     ]
 # )
 
-st.plotly_chart(fig_trend, use_container_width=True)
+# st.plotly_chart(fig_trend, use_container_width=True)
 
 st.markdown("---")
 
