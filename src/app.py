@@ -78,6 +78,13 @@ if 'disruption_type' in df_raw.columns:
 else:
     selected_types = []
 
+# Scope Filter (Local vs National/International)
+if 'local' in df_raw.columns:
+    scope_options = ["All", "Local", "National / International"]
+    selected_scope = st.sidebar.radio("Disruption Scope", options=scope_options, index=0)
+else:
+    selected_scope = "All"
+
 # Apply All Filters Dynamically
 df = df_raw[
     (df_raw['Year'] == selected_year) & 
@@ -117,54 +124,82 @@ st.markdown("---")
 # 6. Interactive Time Series Breakdown with View Switching Buttons
 st.header("📈 Time Series Breakdowns")
 
-# Prepare Month Data aggregation
-trend_month = df.groupby(['Year_Month']).size().reset_index(name='Disruption Count').sort_values('Year_Month')
+view_option = st.radio("Select View", options=["By Month-Year", "By Week-Year"], horizontal=True)
 
-# Prepare Week Data aggregation
-trend_week = df.groupby(['Year_Week']).size().reset_index(name='Disruption Count').sort_values('Year_Week')
+if view_option == "By Month-Year":
+    trend_data = df.groupby(['Year_Month']).size().reset_index(name='Disruption Count').sort_values('Year_Month')
+    x_col = 'Year_Month'
+    x_label = 'Timeline (Year-Month)'
+else:
+    trend_data = df.groupby(['Year_Week']).size().reset_index(name='Disruption Count').sort_values('Year_Week')
+    x_col = 'Year_Week'
+    x_label = 'Timeline (Year-Week)'
 
-# Base figure defaults to Month-Year view
 fig_trend = px.bar(
-    trend_month, 
-    x='Year_Month', 
+    trend_data, 
+    x=x_col, 
     y='Disruption Count',
     title="Disruptions Count Trend",
-    labels={'Year_Month': 'Timeline', 'Disruption Count': 'Number of Incidents'},
+    labels={x_col: x_label, 'Disruption Count': 'Number of Incidents'},
     color='Disruption Count',
-    color_continuous_scale=px.colors.sequential.Blues
+    color_continuous_scale=px.colors.sequential.Blues[3:]
 )
-fig_trend.update_layout(xaxis_type='category')
 
-# Add Interactive View-switching Buttons inside Plotly
-fig_trend.update_layout(
-    updatemenus=[
-        dict(
-            type="buttons",
-            direction="right",
-            active=0,
-            x=0.01,
-            y=1.15,
-            buttons=list([
-                dict(
-                    label="By Month-Year",
-                    method="update",
-                    args=[
-                        {"x": [trend_month['Year_Month']], "y": [trend_month['Disruption Count']], "marker.color": [trend_month['Disruption Count']]},
-                        {"xaxis.title.text": "Timeline (Year-Month)"}
-                    ]
-                ),
-                dict(
-                    label="By Week-Year",
-                    method="update",
-                    args=[
-                        {"x": [trend_week['Year_Week']], "y": [trend_week['Disruption Count']], "marker.color": [trend_week['Disruption Count']]},
-                        {"xaxis.title.text": "Timeline (Year-Week)"}
-                    ]
-                )
-            ]),
-        )
-    ]
-)
+fig_trend.update_layout(xaxis_type='category')
+st.plotly_chart(fig_trend, use_container_width=True)
+
+"""temporarily remove"""
+# # 6. Interactive Time Series Breakdown with View Switching Buttons
+# st.header("📈 Time Trends")
+
+# # Prepare Month Data aggregation
+# trend_month = df.groupby(['Year_Month']).size().reset_index(name='Disruption Count').sort_values('Year_Month')
+
+# # Prepare Week Data aggregation
+# trend_week = df.groupby(['Year_Week']).size().reset_index(name='Disruption Count').sort_values('Year_Week')
+
+# # Base figure defaults to Month-Year view
+# fig_trend = px.bar(
+#     trend_month, 
+#     x='Year_Month', 
+#     y='Disruption Count',
+#     title="Disruptions Count Trend",
+#     labels={'Year_Month': 'Timeline', 'Disruption Count': 'Number of Incidents'},
+#     color='Disruption Count',
+#     color_continuous_scale=px.colors.sequential.Blues[3:]
+# )
+# fig_trend.update_layout(xaxis_type='category')
+
+# # Add Interactive View-switching Buttons inside Plotly
+# fig_trend.update_layout(
+#     updatemenus=[
+#         dict(
+#             type="buttons",
+#             direction="right",
+#             active=0,
+#             x=0.01,
+#             y=1.15,
+#             buttons=list([
+#                 dict(
+#                     label="By Month-Year",
+#                     method="update",
+#                     args=[
+#                         {"x": [trend_month['Year_Month']], "y": [trend_month['Disruption Count']], "marker.color": [trend_month['Disruption Count']]},
+#                         {"xaxis.title.text": "Timeline (Year-Month)"}
+#                     ]
+#                 ),
+#                 dict(
+#                     label="By Week-Year",
+#                     method="update",
+#                     args=[
+#                         {"x": [trend_week['Year_Week']], "y": [trend_week['Disruption Count']], "marker.color": [trend_week['Disruption Count']]},
+#                         {"xaxis.title.text": "Timeline (Year-Week)"}
+#                     ]
+#                 )
+#             ]),
+#         )
+#     ]
+# )
 
 st.plotly_chart(fig_trend, use_container_width=True)
 
