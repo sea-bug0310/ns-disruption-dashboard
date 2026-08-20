@@ -219,7 +219,7 @@ with st.expander("🔍 View Live Active Disruptions"):
         active_df = df
     preview_cols = [
         'id', 'title', 'disruption_type', 'start_time', 'end_time', 
-        'duration_minutes', 'from_station', 'to_station', 'affected_km', 'consequence_level',
+        'duration_hours', 'from_station', 'to_station', 'affected_km', 'consequence_level',
         'consequence_description', 'cause_label', 'Year_Month', 'Year_Week'
     ]
     available_cols = [col for col in preview_cols if col in active_df.columns]
